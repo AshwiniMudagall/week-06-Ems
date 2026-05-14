@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% block title %}Reports{% endblock %}
+{% block page_title %}Reports{% endblock %}
+
+{% block content %}
+
+<!-- Task Completion Report -->
+<h5 class="fw-bold mb-3">📊 Reports Overview</h5>
+<div class="row g-4 mb-4">
+  <div class="col-md-4">
+    <div class="stat-card">
+      <div>
+        <div class="stat-label">Pending Tasks</div>
+        <div class="stat-value text-warning">{{ pending }}</div>
+      </div>
+      <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+        <i class="fa fa-clock"></i>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="stat-card">
+      <div>
+        <div class="stat-label">In Progress</div>
+        <div class="stat-value text-primary">{{ in_prog }}</div>
+      </div>
+      <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+        <i class="fa fa-spinner"></i>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="stat-card">
+      <div>
+        <div class="stat-label">Completed Tasks</div>
+        <div class="stat-value text-success">{{ completed }}</div>
+      </div>
+      <div class="stat-icon bg-success bg-opacity-10 text-success">
+        <i class="fa fa-check-circle"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <!-- Task Chart -->
+  <div class="col-md-6">
+    <div class="card p-4">
+      <h6 class="fw-bold mb-3">✅ Task Completion Report</h6>
+      <canvas id="taskChart" height="200"></canvas>
+    </div>
+  </div>
+  <!-- Jobs Chart -->
+  <div class="col-md-6">
+    <div class="card p-4">
+      <h6 class="fw-bold mb-3">🔧 Jobs Status Report</h6>
+      <canvas id="jobChart" height="200"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Electrician Activity Report -->
+<div class="card mb-4">
+  <div class="card-header bg-dark text-white">👷 Electrician Activity Report</div>
+  <div class="card-body p-0">
+    <table class="table table-bordered table-hover mb-0">
+      <thead class="table-secondary">
+        <tr>
+          <th>Electrician</th>
+          <th>Total Tasks Assigned</th>
+          <th>Tasks Completed</th>
+          <th>Performance</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for e in elec_activity %}
+        <tr>
+          <td>{{ e.name }}</td>
+          <td>{{ e.total_tasks }}</td>
+          <td>{{ e.done }}</td>
+          <td>
+            {% if e.total_tasks > 0 %}
+              {% set pct = ((e.done / e.total_tasks) * 100) | int %}
+              <div class="progress" style="height:18px;">
+                <div class="progress-bar bg-success" style="width:{{ pct }}%">{{ pct }}%</div>
+              </div>
+            {% else %}
+              <span class="text-muted">No tasks</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4" class="text-center text-muted">No data yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Daily Work Report -->
+<div class="card">
+  <div class="card-header bg-info text-dark">📅 Daily Work Report (Recent Activity)</div>
+  <div class="card-body p-0">
+    <ul class="list-group list-group-flush">
+      {% for a in activity %}
+        <li class="list-group-item">
+          <i class="fa fa-circle-dot text-info me-2"></i>{{ a.message }}
+        </li>
+      {% else %}
+        <li class="list-group-item text-muted">No activity logged yet.</li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+
+<script>
+new Chart(document.getElementById('taskChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Pending', 'In Progress', 'Completed'],
+    datasets: [{
+      data: [{{ pending }}, {{ in_prog }}, {{ completed }}],
+      backgroundColor: ['#ffc107', '#0d6efd', '#198754']
+    }]
+  }
+});
+
+new Chart(document.getElementById('jobChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Pending', 'In Progress', 'Completed'],
+    datasets: [{
+      label: 'Jobs',
+      data: [{{ jobs_pending }}, {{ jobs_inprog }}, {{ jobs_completed }}],
+      backgroundColor: ['#6c757d', '#f0ad4e', '#5cb85c']
+    }]
+  },
+  options: { plugins: { legend: { display: false } } }
+});
+</script>
+{% endblock %}

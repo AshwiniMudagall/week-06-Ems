@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% block title %}Electricians{% endblock %}
+{% block page_title %}Electrician Management{% endblock %}
+
+{% block content %}
+<!-- Add Form -->
+<div class="card mb-4">
+  <div class="card-header bg-warning text-dark">Add New Electrician</div>
+  <div class="card-body">
+    <form method="POST" action="/electricians/add">
+      <div class="row g-3">
+        <div class="col-md-3">
+          <input type="text" name="name" class="form-control" placeholder="Full Name" required>
+        </div>
+        <div class="col-md-2">
+          <input type="text" name="phone" class="form-control" placeholder="Phone" required>
+        </div>
+        <div class="col-md-3">
+          <input type="email" name="email" class="form-control" placeholder="Email (optional)">
+        </div>
+        <div class="col-md-2">
+          <input type="text" name="specialization" class="form-control" placeholder="Specialization">
+        </div>
+        <div class="col-md-2">
+          <button class="btn btn-warning w-100">+ Add</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Search & Filter -->
+<form method="GET" action="/electricians" class="row g-2 mb-3">
+  <div class="col-md-5">
+    <input type="text" name="search" class="form-control" placeholder="🔍 Search by name, phone, specialization..."
+           value="{{ search }}">
+  </div>
+  <div class="col-md-3">
+    <select name="status" class="form-select" onchange="this.form.submit()">
+      <option value="All" {% if status_filter=='All' %}selected{% endif %}>All Status</option>
+      <option value="Active" {% if status_filter=='Active' %}selected{% endif %}>Active</option>
+      <option value="Inactive" {% if status_filter=='Inactive' %}selected{% endif %}>Inactive</option>
+    </select>
+  </div>
+  <div class="col-md-2">
+    <button class="btn btn-dark w-100">Search</button>
+  </div>
+  <div class="col-md-2">
+    <a href="/electricians" class="btn btn-outline-secondary w-100">Clear</a>
+  </div>
+</form>
+
+<!-- Table -->
+<div class="card">
+  <div class="card-header bg-dark text-white">All Electricians ({{ electricians | length }} found)</div>
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+      <thead class="table-secondary">
+        <tr>
+          <th>#</th><th>Name</th><th>Phone</th><th>Email</th>
+          <th>Specialization</th><th>Status</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for e in electricians %}
+        <tr>
+          <td>{{ e.id }}</td>
+          <td><strong>{{ e.name }}</strong></td>
+          <td>{{ e.phone }}</td>
+          <td>{{ e.email or '—' }}</td>
+          <td>{{ e.specialization or '—' }}</td>
+          <td>
+            <span class="badge {% if e.status=='Active' %}bg-success{% else %}bg-secondary{% endif %}">
+              {{ e.status }}
+            </span>
+          </td>
+          <td>
+            <a href="/electricians/edit/{{ e.id }}" class="btn btn-sm btn-outline-primary">Edit</a>
+            <a href="/electricians/delete/{{ e.id }}" class="btn btn-sm btn-outline-danger"
+               onclick="return confirm('Delete {{ e.name }}?')">Delete</a>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="text-center text-muted py-3">No electricians found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

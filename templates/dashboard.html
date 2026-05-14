@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="fw-bold mb-0"><i class="bi bi-speedometer2 me-2 text-primary"></i>Admin Dashboard</h4>
+  <span class="text-muted small">Welcome back, {{ session.get('user_name') }} 👋</span>
+</div>
+
+<!-- Stat Cards -->
+<div class="row g-3 mb-4">
+  <div class="col-md-4 col-lg-2">
+    <div class="stat-card bg-primary text-white">
+      <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
+      <div class="stat-value">{{ electricians }}</div>
+      <div class="stat-label">Electricians</div>
+    </div>
+  </div>
+  <div class="col-md-4 col-lg-2">
+    <div class="stat-card bg-info text-white">
+      <div class="stat-icon"><i class="bi bi-briefcase-fill"></i></div>
+      <div class="stat-value">{{ jobs }}</div>
+      <div class="stat-label">Total Jobs</div>
+    </div>
+  </div>
+  <div class="col-md-4 col-lg-2">
+    <div class="stat-card bg-warning text-dark">
+      <div class="stat-icon"><i class="bi bi-list-task"></i></div>
+      <div class="stat-value">{{ tasks }}</div>
+      <div class="stat-label">Total Tasks</div>
+    </div>
+  </div>
+  <div class="col-md-4 col-lg-2">
+    <div class="stat-card bg-success text-white">
+      <div class="stat-icon"><i class="bi bi-check-circle-fill"></i></div>
+      <div class="stat-value">{{ completed }}</div>
+      <div class="stat-label">Completed</div>
+    </div>
+  </div>
+  <div class="col-md-4 col-lg-2">
+    <div class="stat-card bg-secondary text-white">
+      <div class="stat-icon"><i class="bi bi-box-seam-fill"></i></div>
+      <div class="stat-value">{{ materials }}</div>
+      <div class="stat-label">Materials</div>
+    </div>
+  </div>
+  <div class="col-md-4 col-lg-2">
+    <div class="stat-card bg-danger text-white">
+      <div class="stat-icon"><i class="bi bi-bell-fill"></i></div>
+      <div class="stat-value">{{ notifications|length }}</div>
+      <div class="stat-label">Alerts</div>
+    </div>
+  </div>
+</div>
+<div class="col-md-3 col-sm-6">
+  <div class="card border-0 shadow-sm h-100">
+    <div class="card-body d-flex align-items-center gap-3">
+      <div class="rounded-circle bg-success bg-opacity-15 p-3">
+        <i class="fas fa-arrow-down text-success fa-xl"></i>
+      </div>
+      <div>
+        <div class="text-muted small">Revenue Collected</div>
+        <div class="fw-bold fs-5 text-success">₹{{ "%.0f"|format(total_collected) }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="col-md-3 col-sm-6">
+  <div class="card border-0 shadow-sm h-100">
+    <div class="card-body d-flex align-items-center gap-3">
+      <div class="rounded-circle bg-warning bg-opacity-15 p-3">
+        <i class="fas fa-arrow-up text-warning fa-xl"></i>
+      </div>
+      <div>
+        <div class="text-muted small">Total Disbursed</div>
+        <div class="fw-bold fs-5 text-warning">₹{{ "%.0f"|format(total_disbursed) }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row g-3 mb-4">
+
+  <!-- Task Status Doughnut Chart -->
+  <div class="col-md-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-header fw-semibold bg-white">
+        <i class="bi bi-pie-chart-fill text-primary me-2"></i>Task Status Overview
+      </div>
+      <div class="card-body d-flex justify-content-center align-items-center">
+        <canvas id="taskChart" style="max-height:240px;"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Job Status Bar Chart -->
+  <div class="col-md-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-header fw-semibold bg-white">
+        <i class="bi bi-bar-chart-fill text-success me-2"></i>Jobs Status Breakdown
+      </div>
+      <div class="card-body d-flex justify-content-center align-items-center">
+        <canvas id="jobChart" style="max-height:240px;"></canvas>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Notifications + Activity -->
+<div class="row g-3">
+
+  <!-- Notifications -->
+  <div class="col-md-5">
+    <div class="card shadow-sm">
+      <div class="card-header fw-semibold bg-white">
+        <i class="bi bi-bell-fill text-danger me-2"></i>Alerts & Notifications
+      </div>
+      <div class="card-body">
+        {% if notifications %}
+          {% for note in notifications %}
+            <div class="alert alert-{{ note.type }} py-2 mb-2">
+              <i class="bi bi-exclamation-circle me-1"></i> {{ note.msg }}
+            </div>
+          {% endfor %}
+        {% else %}
+          <p class="text-muted text-center py-3">
+            <i class="bi bi-check-all fs-3 d-block mb-2 text-success"></i>
+            All clear! No alerts.
+          </p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Activity -->
+  <div class="col-md-7">
+    <div class="card shadow-sm">
+      <div class="card-header fw-semibold bg-white">
+        <i class="bi bi-activity text-warning me-2"></i>Recent Activity
+      </div>
+      <ul class="list-group list-group-flush">
+        {% if recent %}
+          {% for r in recent %}
+            <li class="list-group-item d-flex align-items-center gap-2 py-2">
+              <span class="badge bg-light text-dark border">#{{ r.id }}</span>
+              <span>{{ r.message }}</span>
+            </li>
+          {% endfor %}
+        {% else %}
+          <li class="list-group-item text-muted text-center py-3">No recent activity.</li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // ── Task Doughnut Chart ─────────────────────────────────
+  const taskCtx = document.getElementById('taskChart').getContext('2d');
+  new Chart(taskCtx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Pending', 'In Progress', 'Completed'],
+      datasets: [{
+        data: [{{ pending_tasks }}, {{ inprog_tasks }}, {{ completed }}],
+        backgroundColor: ['#ffc107', '#0dcaf0', '#198754'],
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'bottom' }
+      }
+    }
+  });
+
+  // ── Jobs Bar Chart ──────────────────────────────────────
+  const jobCtx = document.getElementById('jobChart').getContext('2d');
+  new Chart(jobCtx, {
+    type: 'bar',
+    data: {
+      labels: ['Pending', 'In Progress', 'Completed'],
+      datasets: [{
+        label: 'Jobs',
+        data: [{{ jobs_pending }}, {{ jobs_inprog }}, {{ jobs_done }}],
+        backgroundColor: ['#ffc107', '#0d6efd', '#198754'],
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, ticks: { stepSize: 1 } }
+      }
+    }
+  });
+</script>
+{% endblock %}

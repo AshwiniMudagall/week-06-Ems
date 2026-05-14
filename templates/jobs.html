@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block title %}Jobs{% endblock %}
+{% block page_title %}Job Management{% endblock %}
+
+{% block content %}
+<!-- Add Form -->
+<div class="card mb-4">
+  <div class="card-header bg-primary text-white">Add New Job</div>
+  <div class="card-body">
+    <form method="POST" action="/jobs/add">
+      <div class="row g-3">
+        <div class="col-md-3">
+          <input type="text" name="title" class="form-control" placeholder="Job Title" required>
+        </div>
+        <div class="col-md-2">
+          <input type="text" name="location" class="form-control" placeholder="Location" required>
+        </div>
+        <div class="col-md-2">
+          <input type="date" name="deadline" class="form-control" required>
+        </div>
+        <div class="col-md-3">
+          <select name="electrician_id" class="form-select">
+            <option value="">-- Assign Electrician --</option>
+            {% for e in electricians %}
+            <option value="{{ e.id }}">{{ e.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-2">
+          <button class="btn btn-primary w-100">+ Add</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Search & Filter -->
+<form method="GET" action="/jobs" class="row g-2 mb-3">
+  <div class="col-md-5">
+    <input type="text" name="search" class="form-control" placeholder="🔍 Search by title or location..."
+           value="{{ search }}">
+  </div>
+  <div class="col-md-3">
+    <select name="status" class="form-select" onchange="this.form.submit()">
+      <option value="All" {% if status_filter=='All' %}selected{% endif %}>All Status</option>
+      <option value="Pending" {% if status_filter=='Pending' %}selected{% endif %}>Pending</option>
+      <option value="In Progress" {% if status_filter=='In Progress' %}selected{% endif %}>In Progress</option>
+      <option value="Completed" {% if status_filter=='Completed' %}selected{% endif %}>Completed</option>
+    </select>
+  </div>
+  <div class="col-md-2">
+    <button class="btn btn-dark w-100">Search</button>
+  </div>
+  <div class="col-md-2">
+    <a href="/jobs" class="btn btn-outline-secondary w-100">Clear</a>
+  </div>
+</form>
+
+<!-- Table -->
+<div class="card">
+  <div class="card-header bg-dark text-white">All Jobs ({{ jobs | length }} found)</div>
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+      <thead class="table-secondary">
+        <tr>
+          <th>#</th><th>Title</th><th>Location</th><th>Deadline</th>
+          <th>Assigned To</th><th>Status</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for j in jobs %}
+        <tr>
+          <td>{{ j.id }}</td>
+          <td><strong>{{ j.title }}</strong></td>
+          <td>{{ j.location }}</td>
+          <td>{{ j.deadline or '—' }}</td>
+          <td>{{ j.electrician_name or '<span class="text-muted">Unassigned</span>' }}</td>
+          <td>
+            <span class="badge
+              {% if j.status=='Completed' %}bg-success
+              {% elif j.status=='In Progress' %}bg-warning text-dark
+              {% else %}bg-secondary{% endif %}">
+              {{ j.status }}
+            </span>
+          </td>
+          <td>
+            <form method="POST" action="/jobs/status/{{ j.id }}" class="d-inline">
+              <select name="status" class="form-select form-select-sm d-inline w-auto"
+                      onchange="this.form.submit()">
+                <option {% if j.status=='Pending' %}selected{% endif %}>Pending</option>
+                <option {% if j.status=='In Progress' %}selected{% endif %}>In Progress</option>
+                <option {% if j.status=='Completed' %}selected{% endif %}>Completed</option>
+              </select>
+            </form>
+            <a href="/jobs/edit/{{ j.id }}" class="btn btn-sm btn-outline-primary ms-1">Edit</a>
+            <a href="/jobs/delete/{{ j.id }}" class="btn btn-sm btn-outline-danger ms-1"
+               onclick="return confirm('Delete this job?')">Delete</a>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="text-center text-muted py-3">No jobs found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

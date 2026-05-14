@@ -1,0 +1,273 @@
+{% extends "base.html" %}
+{% block title %}Transactions & Payments{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+  <!-- Page Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="mb-0 fw-bold"><i class="fas fa-credit-card me-2 text-primary"></i>Transactions</h4>
+      <small class="text-muted">Full payment audit trail — Client collections & Electrician disbursements</small>
+    </div>
+    <!-- Pay Electrician button triggers modal -->
+    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#payElecModal">
+      <i class="fas fa-money-bill-wave me-2"></i>Pay Electrician
+    </button>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body d-flex align-items-center gap-3">
+          <div class="rounded-circle bg-success bg-opacity-15 p-3">
+            <i class="fas fa-arrow-down text-success fa-lg"></i>
+          </div>
+          <div>
+            <div class="text-muted small">Total Collected (Client → Admin)</div>
+            <div class="fw-bold fs-5 text-success">₹{{ "%.2f"|format(total_received) }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body d-flex align-items-center gap-3">
+          <div class="rounded-circle bg-warning bg-opacity-15 p-3">
+            <i class="fas fa-arrow-up text-warning fa-lg"></i>
+          </div>
+          <div>
+            <div class="text-muted small">Total Disbursed (Admin → Electrician)</div>
+            <div class="fw-bold fs-5 text-warning">₹{{ "%.2f"|format(total_paid_out) }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body d-flex align-items-center gap-3">
+          <div class="rounded-circle bg-info bg-opacity-15 p-3">
+            <i class="fas fa-hourglass-half text-info fa-lg"></i>
+          </div>
+          <div>
+            <div class="text-muted small">Net Balance</div>
+            <div class="fw-bold fs-5 text-info">₹{{ "%.2f"|format(total_received - total_paid_out) }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+      <form method="GET" class="row g-2 align-items-end">
+        <div class="col-md-4">
+          <label class="form-label small fw-semibold">Payment Type</label>
+          <select name="type" class="form-select form-select-sm">
+            <option value="All" {% if filter_type == 'All' %}selected{% endif %}>All Types</option>
+            <option value="client_to_admin" {% if filter_type == 'client_to_admin' %}selected{% endif %}>Client → Admin</option>
+            <option value="admin_to_electrician" {% if filter_type == 'admin_to_electrician' %}selected{% endif %}>Admin → Electrician</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label small fw-semibold">Status</label>
+          <select name="status" class="form-select form-select-sm">
+            <option value="All" {% if filter_status == 'All' %}selected{% endif %}>All Statuses</option>
+            <option value="success" {% if filter_status == 'success' %}selected{% endif %}>Success</option>
+            <option value="pending" {% if filter_status == 'pending' %}selected{% endif %}>Pending</option>
+            <option value="failed" {% if filter_status == 'failed' %}selected{% endif %}>Failed</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <button type="submit" class="btn btn-primary btn-sm w-100">
+            <i class="fas fa-filter me-1"></i>Filter
+          </button>
+        </div>
+        <div class="col-md-2">
+          <a href="{{ url_for('transactions') }}" class="btn btn-outline-secondary btn-sm w-100">
+            <i class="fas fa-times me-1"></i>Clear
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Transactions Table -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>#</th>
+              <th>Job</th>
+              <th>Amount</th>
+              <th>Type</th>
+              <th>Payer / Payee</th>
+              <th>Payment ID</th>
+              <th>Status</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for txn in transactions %}
+            <tr>
+              <td class="text-muted small">{{ txn.id }}</td>
+              <td>
+                <div class="fw-semibold">{{ txn.job_title or 'N/A' }}</div>
+                <div class="text-muted small">Job #{{ txn.job_id or '—' }}</div>
+              </td>
+              <td class="fw-bold {% if txn.payment_type == 'client_to_admin' %}text-success{% else %}text-warning{% endif %}">
+                ₹{{ "%.2f"|format(txn.amount) }}
+              </td>
+              <td>
+                {% if txn.payment_type == 'client_to_admin' %}
+                  <span class="badge bg-success-subtle text-success border border-success-subtle">
+                    <i class="fas fa-user me-1"></i>Client → Admin
+                  </span>
+                {% else %}
+                  <span class="badge bg-warning-subtle text-warning border border-warning-subtle">
+                    <i class="fas fa-bolt me-1"></i>Admin → Electrician
+                  </span>
+                {% endif %}
+              </td>
+              <td>
+                <div>{{ txn.payer_name or '—' }}</div>
+                {% if txn.notes %}<div class="text-muted small">{{ txn.notes }}</div>{% endif %}
+              </td>
+              <td>
+                <code class="small text-muted">
+                  {{ (txn.razorpay_payment_id or txn.razorpay_order_id or '—')[:20] }}
+                  {% if (txn.razorpay_payment_id or '') | length > 20 %}…{% endif %}
+                </code>
+              </td>
+              <td>
+                {% if txn.status == 'success' %}
+                  <span class="badge bg-success"><i class="fas fa-check me-1"></i>Success</span>
+                {% elif txn.status == 'pending' %}
+                  <span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i>Pending</span>
+                {% else %}
+                  <span class="badge bg-danger"><i class="fas fa-times me-1"></i>Failed</span>
+                {% endif %}
+              </td>
+              <td class="small text-muted">{{ txn.created_at[:16] if txn.created_at else '—' }}</td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="8" class="text-center text-muted py-5">
+                <i class="fas fa-receipt fa-2x mb-2 d-block opacity-30"></i>
+                No transactions found.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payment Link Generator -->
+  <div class="card border-0 shadow-sm mt-4">
+    <div class="card-header bg-white fw-semibold">
+      <i class="fas fa-link me-2 text-primary"></i>Generate Client Payment Link
+    </div>
+    <div class="card-body">
+      <p class="text-muted small mb-3">
+        Share this link with a client so they can pay for a job online via Razorpay.
+      </p>
+      <div class="row g-2 align-items-end">
+        <div class="col-md-6">
+          <label class="form-label small fw-semibold">Select Job</label>
+          <select id="payLinkJob" class="form-select">
+            <option value="">— Select a job —</option>
+            {% for job in jobs %}
+            <option value="{{ job.id }}" data-amount="{{ job.amount }}">
+              {{ job.title }} — ₹{{ "%.2f"|format(job.amount) }}
+              {% if job.payment_status == 'Paid' %}✅ (Paid){% endif %}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label small fw-semibold">Payment Link</label>
+          <div class="input-group">
+            <input type="text" id="payLinkOutput" class="form-control form-control-sm" readonly
+                   placeholder="Select a job above"/>
+            <button class="btn btn-outline-secondary btn-sm" onclick="copyPayLink()" title="Copy link">
+              <i class="fas fa-copy"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      <script>
+        document.getElementById('payLinkJob').addEventListener('change', function() {
+          const jid = this.value;
+          const base = window.location.origin;
+          document.getElementById('payLinkOutput').value = jid ? `${base}/jobs/${jid}/pay` : '';
+        });
+        function copyPayLink() {
+          const el = document.getElementById('payLinkOutput');
+          if (!el.value) return;
+          navigator.clipboard.writeText(el.value);
+          alert('Payment link copied to clipboard!');
+        }
+      </script>
+    </div>
+  </div>
+
+</div>
+
+<!-- Pay Electrician Modal -->
+<div class="modal fade" id="payElecModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title"><i class="fas fa-money-bill-wave me-2"></i>Pay Electrician</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="POST" id="payElecForm">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Select Job (Completed)</label>
+            <select name="job_id_sel" id="modalJob" class="form-select" required
+                    onchange="updatePayElecAction(this.value)">
+              <option value="">— Select a completed job —</option>
+              {% for job in jobs %}
+              <option value="{{ job.id }}">{{ job.title }} — Job #{{ job.id }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Amount (₹)</label>
+            <input type="number" name="amount" class="form-control" min="1" step="0.01"
+                   placeholder="e.g. 2500.00" required/>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Notes (optional)</label>
+            <input type="text" name="notes" class="form-control"
+                   placeholder="e.g. Labour charges for wiring job"/>
+          </div>
+          <div class="alert alert-info small mb-0">
+            <i class="fas fa-info-circle me-1"></i>
+            This records a manual payment disbursement. Use bank transfer / UPI outside the system and record it here for audit.
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-success">
+            <i class="fas fa-paper-plane me-2"></i>Record Payment
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  function updatePayElecAction(jid) {
+    document.getElementById('payElecForm').action = `/admin/pay-electrician/${jid}`;
+  }
+</script>
+{% endblock %}

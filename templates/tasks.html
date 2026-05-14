@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% block title %}Tasks{% endblock %}
+{% block page_title %}Task Management{% endblock %}
+
+{% block content %}
+<!-- Add Form -->
+<div class="card mb-4">
+  <div class="card-header bg-success text-white">Assign New Task</div>
+  <div class="card-body">
+    <form method="POST" action="/tasks/add">
+      <div class="row g-3">
+        <div class="col-md-3">
+          <input type="text" name="task" class="form-control" placeholder="Task Description" required>
+        </div>
+        <div class="col-md-3">
+          <select name="job_id" class="form-select">
+            <option value="">-- Link to Job --</option>
+            {% for j in jobs %}
+            <option value="{{ j.id }}">{{ j.title }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-2">
+          <select name="electrician_id" class="form-select">
+            <option value="">-- Assign Electrician --</option>
+            {% for e in electricians %}
+            <option value="{{ e.id }}">{{ e.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-2">
+          <select name="status" class="form-select">
+            <option>Pending</option>
+            <option>In Progress</option>
+            <option>Completed</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <button class="btn btn-success w-100">+ Add</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Search & Filter -->
+<form method="GET" action="/tasks" class="row g-2 mb-3">
+  <div class="col-md-5">
+    <input type="text" name="search" class="form-control" placeholder="🔍 Search tasks..."
+           value="{{ search }}">
+  </div>
+  <div class="col-md-3">
+    <select name="status" class="form-select" onchange="this.form.submit()">
+      <option value="All" {% if status_filter=='All' %}selected{% endif %}>All Status</option>
+      <option value="Pending" {% if status_filter=='Pending' %}selected{% endif %}>Pending</option>
+      <option value="In Progress" {% if status_filter=='In Progress' %}selected{% endif %}>In Progress</option>
+      <option value="Completed" {% if status_filter=='Completed' %}selected{% endif %}>Completed</option>
+    </select>
+  </div>
+  <div class="col-md-2">
+    <button class="btn btn-dark w-100">Search</button>
+  </div>
+  <div class="col-md-2">
+    <a href="/tasks" class="btn btn-outline-secondary w-100">Clear</a>
+  </div>
+</form>
+
+<!-- Filter pills -->
+<div class="mb-3">
+  {% for s in ['All', 'Pending', 'In Progress', 'Completed'] %}
+  <a href="/tasks?status={{ s }}"
+     class="btn btn-sm me-1 {% if status_filter == s %}btn-dark{% else %}btn-outline-secondary{% endif %}">
+    {{ s }}
+  </a>
+  {% endfor %}
+</div>
+
+<!-- Table -->
+<div class="card">
+  <div class="card-header bg-dark text-white">Tasks — {{ status_filter }} ({{ tasks | length }} found)</div>
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+      <thead class="table-secondary">
+        <tr>
+          <th>#</th><th>Task</th><th>Job</th><th>Assigned To</th>
+          <th>Status</th><th>Update</th><th>Delete</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in tasks %}
+        <tr>
+          <td>{{ t.id }}</td>
+          <td>{{ t.task }}</td>
+          <td>{{ t.job_title or '—' }}</td>
+          <td>{{ t.electrician_name or '—' }}</td>
+          <td>
+            <span class="badge
+              {% if t.status=='Completed' %}bg-success
+              {% elif t.status=='In Progress' %}bg-warning text-dark
+              {% else %}bg-secondary{% endif %}">
+              {{ t.status }}
+            </span>
+          </td>
+          <td>
+            <form method="POST" action="/tasks/update_status/{{ t.id }}" class="d-inline">
+              <select name="status" class="form-select form-select-sm d-inline w-auto"
+                      onchange="this.form.submit()">
+                <option {% if t.status=='Pending' %}selected{% endif %}>Pending</option>
+                <option {% if t.status=='In Progress' %}selected{% endif %}>In Progress</option>
+                <option {% if t.status=='Completed' %}selected{% endif %}>Completed</option>
+              </select>
+            </form>
+          </td>
+          <td>
+            <a href="/tasks/delete/{{ t.id }}" class="btn btn-sm btn-outline-danger"
+               onclick="return confirm('Delete this task?')">Delete</a>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="text-center text-muted py-3">No tasks found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

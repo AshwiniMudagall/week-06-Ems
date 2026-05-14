@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block title %}Edit Job{% endblock %}
+{% block page_title %}Edit Job{% endblock %}
+{% block content %}
+<div class="card shadow-sm" style="max-width:500px;">
+  <div class="card-body">
+    <form method="POST" action="/jobs/edit/{{ job.id }}">
+      <div class="mb-3"><label class="form-label">Job Title</label>
+        <input type="text" name="title" class="form-control" value="{{ job.title }}" required></div>
+      <div class="mb-3"><label class="form-label">Location</label>
+        <input type="text" name="location" class="form-control" value="{{ job.location }}"></div>
+      <div class="mb-3"><label class="form-label">Deadline</label>
+        <input type="date" name="deadline" class="form-control" value="{{ job.deadline or '' }}"></div>
+      <div class="mb-3"><label class="form-label">Assign Electrician</label>
+        <select name="electrician_id" class="form-select">
+          <option value="">-- Unassigned --</option>
+          {% for e in electricians %}
+          <option value="{{ e.id }}" {% if job.electrician_id == e.id %}selected{% endif %}>{{ e.name }}</option>
+          {% endfor %}
+        </select></div>
+      <div class="mb-3"><label class="form-label">Status</label>
+        <select name="status" class="form-select">
+          <option {% if job.status=='Pending' %}selected{% endif %}>Pending</option>
+          <option {% if job.status=='In Progress' %}selected{% endif %}>In Progress</option>
+          <option {% if job.status=='Completed' %}selected{% endif %}>Completed</option>
+        </select></div>
+      
+        <div class="mb-3">
+  <label class="form-label fw-semibold">Service Amount (₹)</label>
+  <div class="input-group">
+    <span class="input-group-text">₹</span>
+    <input type="number" name="amount" class="form-control"
+           step="0.01" min="0" placeholder="0.00"/>
+  </div>
+</div>
+
+<div class="mb-3">
+  <label class="form-label fw-semibold">Client Name</label>
+  <input type="text" name="client_name" class="form-control"
+         placeholder="e.g. Ravi Kumar"/>
+</div>
+
+<div class="mb-3">
+  <label class="form-label fw-semibold">Client Email</label>
+  <input type="email" name="client_email" class="form-control"
+         placeholder="client@example.com"/>
+</div>
+      
+      
+      
+        <button class="btn btn-primary w-100">Save Changes</button>
+      <a href="/jobs" class="btn btn-secondary w-100 mt-2">Cancel</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

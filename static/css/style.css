@@ -1,0 +1,173 @@
+/* =========================================================
+   FieldOps Manager – Week 5 Stylesheet
+   ========================================================= */
+
+/* ── Variables ─────────────────────────────────────────── */
+:root {
+  --sidebar-bg: #1a1f2e;
+  --sidebar-width: 230px;
+  --primary: #0d6efd;
+  --body-bg: #f0f2f5;
+}
+
+/* ── Global ─────────────────────────────────────────────── */
+body {
+  background-color: var(--body-bg);
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 0.92rem;
+}
+
+/* ── Sidebar ─────────────────────────────────────────────── */
+.sidebar {
+  width: var(--sidebar-width);
+  min-height: 100vh;
+  background: var(--sidebar-bg);
+  color: #fff;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.sidebar-brand {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.5px;
+}
+
+.sidebar .nav-link {
+  color: #adb5bd;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  transition: all 0.2s;
+}
+
+.sidebar .nav-link:hover,
+.sidebar .nav-link.active {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+/* ── Main Content ─────────────────────────────────────────── */
+.main-content {
+  min-height: 100vh;
+  background: var(--body-bg);
+}
+
+/* ── Stat Cards ─────────────────────────────────────────── */
+.stat-card {
+  border-radius: 12px;
+  padding: 1rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-icon {
+  font-size: 1.8rem;
+  opacity: 0.8;
+}
+
+.stat-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0.85;
+}
+
+/* ── Cards ─────────────────────────────────────────── */
+.card {
+  border: none;
+  border-radius: 12px;
+}
+
+.card-header {
+  border-bottom: 1px solid #f0f0f0;
+  border-radius: 12px 12px 0 0 !important;
+  padding: 0.85rem 1.2rem;
+}
+
+/* ── Tables ─────────────────────────────────────────── */
+.table thead th {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: #6c757d;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.table-hover tbody tr:hover {
+  background-color: #f8f9ff;
+}
+
+/* ── Badges ─────────────────────────────────────────── */
+.badge {
+  font-weight: 500;
+  font-size: 0.75rem;
+  padding: 0.35em 0.65em;
+}
+
+/* ── Buttons ─────────────────────────────────────────── */
+.btn {
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+/* ── Flash Messages ─────────────────────────────────────── */
+.flash-messages .alert {
+  border-radius: 10px;
+  font-size: 0.88rem;
+}
+
+/* ── Auth Pages ─────────────────────────────────────────── */
+.auth-body {
+  background: linear-gradient(135deg, #1a1f2e 0%, #2c3556 100%);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.auth-wrapper {
+  width: 100%;
+  max-width: 420px;
+  padding: 1rem;
+}
+
+.auth-card {
+  border: none;
+  border-radius: 16px;
+}
+
+/* ── Forms ─────────────────────────────────────────── */
+.form-control,
+.form-select {
+  border-radius: 8px;
+  font-size: 0.88rem;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+}
+
+/* ── Progress Bars ─────────────────────────────────────── */
+.progress {
+  border-radius: 20px;
+  height: 8px;
+}
+
+/* ── Scrollbar ─────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }

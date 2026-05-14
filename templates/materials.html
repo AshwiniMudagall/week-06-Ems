@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}Materials{% endblock %}
+{% block page_title %}Materials Management{% endblock %}
+{% block content %}
+<div class="card mb-4">
+  <div class="card-header bg-info text-dark">Add Material</div>
+  <div class="card-body">
+    <form method="POST" action="/materials/add">
+      <div class="row g-3">
+        <div class="col-md-4"><input type="text" name="name" class="form-control" placeholder="Material Name" required></div>
+        <div class="col-md-3"><input type="number" name="quantity" class="form-control" placeholder="Quantity" min="1" required></div>
+        <div class="col-md-3">
+          <select name="unit" class="form-select">
+            <option value="pcs">pcs</option><option value="m">m (meters)</option>
+            <option value="kg">kg</option><option value="L">L</option><option value="box">box</option>
+          </select></div>
+        <div class="col-md-2"><button class="btn btn-info w-100">Add</button></div>
+      </div>
+    </form>
+  </div>
+</div>
+<div class="card">
+  <div class="card-header bg-dark text-white">Material Inventory</div>
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+      <thead class="table-secondary">
+        <tr><th>#</th><th>Material</th><th>Available</th><th>Used</th><th>Unit</th><th>Update Usage</th><th>Delete</th></tr>
+      </thead>
+      <tbody>
+        {% for m in materials %}
+        <tr>
+          <td>{{ m.id }}</td><td>{{ m.name }}</td>
+          <td><span class="{% if m.quantity==0 %}text-danger fw-bold{% elif m.quantity<5 %}text-warning fw-bold{% else %}text-success{% endif %}">{{ m.quantity }}</span></td>
+          <td>{{ m.used }}</td><td>{{ m.unit }}</td>
+          <td>
+            <form method="POST" action="/materials/use/{{ m.id }}" class="d-flex gap-2">
+              <input type="number" name="amount" class="form-control form-control-sm" style="width:80px;" min="1" placeholder="qty" required>
+              <button class="btn btn-sm btn-outline-info">Use</button>
+            </form>
+          </td>
+          <td><a href="/materials/delete/{{ m.id }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete?')">Delete</a></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="text-center text-muted py-3">No materials yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

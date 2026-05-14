@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="fw-bold mb-0">
+    <i class="bi bi-check2-square me-2 text-primary"></i>My Assigned Tasks
+  </h4>
+  {% if electrician %}
+    <span class="badge bg-primary fs-6">
+      <i class="bi bi-person-fill me-1"></i>{{ electrician.name }}
+    </span>
+  {% endif %}
+</div>
+
+{% if not electrician %}
+  <!-- Account not yet linked to an electrician profile -->
+  <div class="alert alert-warning">
+    <i class="bi bi-exclamation-triangle me-2"></i>
+    Your account is not linked to an electrician profile yet.
+    Please contact your admin and make sure the email matches.
+  </div>
+
+{% elif tasks %}
+
+  <!-- Task Stats Bar -->
+  <div class="row g-2 mb-4">
+    <div class="col-4">
+      <div class="stat-card bg-warning text-dark text-center py-3">
+        <div class="fw-bold fs-4">{{ tasks|selectattr('status','equalto','Pending')|list|length }}</div>
+        <small>Pending</small>
+      </div>
+    </div>
+    <div class="col-4">
+      <div class="stat-card bg-info text-white text-center py-3">
+        <div class="fw-bold fs-4">{{ tasks|selectattr('status','equalto','In Progress')|list|length }}</div>
+        <small>In Progress</small>
+      </div>
+    </div>
+    <div class="col-4">
+      <div class="stat-card bg-success text-white text-center py-3">
+        <div class="fw-bold fs-4">{{ tasks|selectattr('status','equalto','Completed')|list|length }}</div>
+        <small>Completed</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- Task Cards -->
+  <div class="row g-3">
+    {% for t in tasks %}
+    <div class="col-md-6 col-lg-4">
+      <div class="card shadow-sm h-100 border-0">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <h6 class="fw-semibold mb-0">{{ t.task }}</h6>
+            <span class="badge
+              {% if t.status == 'Completed' %}bg-success
+              {% elif t.status == 'In Progress' %}bg-info
+              {% else %}bg-warning text-dark{% endif %}">
+              {{ t.status }}
+            </span>
+          </div>
+          {% if t.job_title %}
+            <p class="text-muted small mb-3">
+              <i class="bi bi-briefcase me-1"></i>{{ t.job_title }}
+            </p>
+          {% endif %}
+
+          <!-- Status Update Form -->
+          <form action="{{ url_for('electrician_update_task', tid=t.id) }}" method="POST" class="d-flex gap-2">
+            <select name="status" class="form-select form-select-sm">
+              <option {% if t.status == 'Pending' %}selected{% endif %}>Pending</option>
+              <option {% if t.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+              <option {% if t.status == 'Completed' %}selected{% endif %}>Completed</option>
+            </select>
+            <button type="submit" class="btn btn-primary btn-sm">
+              <i class="bi bi-arrow-repeat"></i>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+{% else %}
+  <!-- No tasks assigned yet -->
+  <div class="text-center py-5 text-muted">
+    <i class="bi bi-inbox fs-1 d-block mb-3"></i>
+    <h5>No tasks assigned to you yet.</h5>
+    <p>Check back later or contact your admin.</p>
+  </div>
+{% endif %}
+
+{% endblock %}

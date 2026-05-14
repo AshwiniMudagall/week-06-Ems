@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pay for Service — FieldOps Manager</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <style>
+    body { background: #f0f4f8; font-family: 'Segoe UI', sans-serif; }
+    .pay-card {
+      max-width: 480px; margin: 60px auto;
+      background: #fff; border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.12); overflow: hidden;
+    }
+    .pay-header {
+      background: linear-gradient(135deg, #1e3a5f, #2563eb);
+      color: #fff; padding: 32px 24px 24px;
+    }
+    .pay-body { padding: 28px 24px; }
+    .amount-badge {
+      font-size: 2rem; font-weight: 700;
+      color: #1e3a5f;
+    }
+    .info-row { display: flex; justify-content: space-between; margin-bottom: 8px; }
+    .info-label { color: #6b7280; font-size: .85rem; }
+    .info-value { font-weight: 600; font-size: .9rem; }
+    .btn-pay {
+      width: 100%; padding: 14px; font-size: 1.1rem; font-weight: 600;
+      border-radius: 10px; background: #2563eb; color: #fff; border: none;
+      transition: background .2s;
+    }
+    .btn-pay:hover { background: #1e40af; }
+    .btn-pay:disabled { background: #94a3b8; cursor: not-allowed; }
+    .demo-banner {
+      background: #fef3c7; border-left: 4px solid #f59e0b;
+      padding: 10px 14px; border-radius: 6px; margin-bottom: 20px;
+      font-size: .85rem;
+    }
+    .status-icon { font-size: 2.5rem; margin-bottom: 10px; }
+    #spinner { display: none; }
+    .secured { font-size: .75rem; color: #9ca3af; text-align: center; margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <div class="pay-card">
+    <div class="pay-header">
+      <div class="d-flex align-items-center gap-3">
+        <i class="fas fa-bolt fa-2x"></i>
+        <div>
+          <div class="fw-bold fs-5">FieldOps Manager</div>
+          <div style="opacity:.8; font-size:.85rem">Electrician Contractor Service</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pay-body">
+      <!-- Job info -->
+      <div class="mb-3 pb-3 border-bottom">
+        <div class="text-muted small mb-1">SERVICE / JOB</div>
+        <div class="fw-bold fs-5">{{ job.title }}</div>
+        {% if job.location %}
+        <div class="text-muted small"><i class="fas fa-map-marker-alt me-1"></i>{{ job.location }}</div>
+        {% endif %}
+      </div>
+
+      <!-- Amount -->
+      <div class="text-center mb-4">
+        <div class="text-muted small">TOTAL AMOUNT DUE</div>
+        <div class="amount-badge">₹{{ "%.2f"|format(job.amount) }}</div>
+      </div>
+
+      <!-- Payment status check -->
+      {% if job.payment_status == 'Paid' %}
+        <div class="alert alert-success text-center">
+          <i class="fas fa-check-circle fa-2x mb-2 d-block"></i>
+          This invoice has already been paid. Thank you!
+        </div>
+      {% else %}
+
+        <!-- Demo mode warning -->
+        {% if not razorpay_available or razorpay_key == 'rzp_test_REPLACE_ME' %}
+        <div class="demo-banner">
+          <i class="fas fa-info-circle me-1"></i>
+          <strong>Demo Mode</strong> — No real Razorpay keys configured.
+          Payment will be simulated. To go live, add your Razorpay test keys as environment variables.
+        </div>
+        {% endif %}
+
+        <!-- Payer details form -->
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Your Name</label>
+          <input type="text" id="payerName" class="form-control"
+                 value="{{ job.client_name or '' }}" placeholder="Enter your name" required/>
+        </div>
+        <div class="mb-4">
+          <label class="form-label fw-semibold">Email</label>
+          <input type="email" id="payerEmail" class="form-control"
+                 value="{{ job.client_email or '' }}" placeholder="Enter your email" required/>
+        </div>
+
+        <!-- Pay Button -->
+        <button id="payBtn" class="btn-pay" onclick="initiatePayment()">
+          <span id="btnText"><i class="fas fa-lock me-2"></i>Pay ₹{{ "%.2f"|format(job.amount) }}</span>
+          <span id="spinner"><i class="fas fa-spinner fa-spin me-2"></i>Processing...</span>
+        </button>
+
+        <div class="secured">
+          <i class="fas fa-shield-alt me-1"></i>
+          Secured by Razorpay &nbsp;|&nbsp; 256-bit SSL Encryption
+        </div>
+
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Razorpay checkout script -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script>
+    const JOB_ID = {{ job.id }};
+
+    async function initiatePayment() {
+      const name  = document.getElementById('payerName').value.trim();
+      const email = document.getElementById('payerEmail').value.trim();
+      if (!name || !email) {
+        alert('Please enter your name and email before paying.');
+        return;
+      }
+
+      // Show spinner
+      document.getElementById('btnText').style.display = 'none';
+      document.getElementById('spinner').style.display = 'inline';
+      document.getElementById('payBtn').disabled = true;
+
+      try {
+        // Step 1: Create order on backend
+        const resp = await fetch('/api/create-order', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ job_id: JOB_ID })
+        });
+        const order = await resp.json();
+
+        if (order.error) {
+          alert('Error: ' + order.error);
+          resetBtn();
+          return;
+        }
+
+        // Step 2: Demo mode — skip Razorpay modal
+        if (order.demo_mode) {
+          await simulateDemoPayment(order, name, email);
+          return;
+        }
+
+        // Step 2: Open Razorpay checkout modal
+        const options = {
+          key:         order.key_id,
+          amount:      order.amount,
+          currency:    order.currency,
+          name:        'FieldOps Manager',
+          description: order.job_title,
+          order_id:    order.order_id,
+          prefill: { name: name, email: email },
+          theme: { color: '#2563eb' },
+          handler: async function(response) {
+            await verifyAndComplete(response, name, email, false);
+          },
+          modal: {
+            ondismiss: function() {
+              window.location.href = `/payment/failure?job_id=${JOB_ID}`;
+            }
+          }
+        };
+        const rzp = new Razorpay(options);
+        rzp.open();
+
+      } catch (err) {
+        alert('Network error. Please try again.');
+        resetBtn();
+      }
+    }
+
+    async function simulateDemoPayment(order, name, email) {
+      // In demo mode, simulate a successful payment immediately
+      const fakePaymentId = 'pay_DEMO_' + Math.random().toString(36).substr(2, 10).toUpperCase();
+      await verifyAndComplete({
+        razorpay_order_id:   order.order_id,
+        razorpay_payment_id: fakePaymentId,
+        razorpay_signature:  'demo_signature'
+      }, name, email, true);
+    }
+
+    async function verifyAndComplete(response, name, email, isDemo) {
+      const verifyResp = await fetch('/api/verify-payment', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          razorpay_order_id:   response.razorpay_order_id,
+          razorpay_payment_id: response.razorpay_payment_id,
+          razorpay_signature:  response.razorpay_signature,
+          job_id:              JOB_ID,
+          payer_name:          name,
+          payer_email:         email,
+          amount:              '{{ "%.2f"|format(job.amount) }}',
+          demo_mode:           isDemo
+        })
+      });
+      const result = await verifyResp.json();
+      if (result.success) {
+        window.location.href = result.redirect;
+      } else {
+        alert('Payment verification failed: ' + (result.error || 'Unknown error'));
+        window.location.href = `/payment/failure?job_id=${JOB_ID}`;
+      }
+    }
+
+    function resetBtn() {
+      document.getElementById('btnText').style.display = 'inline';
+      document.getElementById('spinner').style.display = 'none';
+      document.getElementById('payBtn').disabled = false;
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,88 @@
+
+
+<li class="nav-item">
+  <a class="nav-link {% if request.endpoint == 'transactions' %}active{% endif %}"
+     href="{{ url_for('transactions') }}">
+    <i class="fas fa-credit-card me-2"></i>Transactions
+  </a>
+</li>
+
+
+
+<div class="mb-3">
+  <label class="form-label fw-semibold">Service Amount (₹)</label>
+  <div class="input-group">
+    <span class="input-group-text">₹</span>
+    <input type="number" name="amount" class="form-control"
+           step="0.01" min="0" placeholder="0.00"
+           value="{{ job.amount if job else '' }}"/>
+  </div>
+  <div class="form-text">Set the invoice amount for the client to pay via Razorpay.</div>
+</div>
+
+<!-- Client Name -->
+<div class="mb-3">
+  <label class="form-label fw-semibold">Client Name</label>
+  <input type="text" name="client_name" class="form-control"
+         placeholder="e.g. Ravi Kumar"
+         value="{{ job.client_name if job else '' }}"/>
+</div>
+
+<!-- Client Email -->
+<div class="mb-3">
+  <label class="form-label fw-semibold">Client Email</label>
+  <input type="email" name="client_email" class="form-control"
+         placeholder="client@example.com"
+         value="{{ job.client_email if job else '' }}"/>
+  <div class="form-text">Used to pre-fill the payment form when client opens the payment link.</div>
+</div>
+
+<!-- Payment Status (read-only display) -->
+{% if job %}
+<div class="mb-3">
+  <label class="form-label fw-semibold">Payment Status</label>
+  <div>
+    {% if job.payment_status == 'Paid' %}
+      <span class="badge bg-success fs-6"><i class="fas fa-check me-1"></i>Paid</span>
+    {% else %}
+      <span class="badge bg-warning text-dark fs-6"><i class="fas fa-clock me-1"></i>Unpaid</span>
+      {% if job.amount > 0 %}
+      <a href="{{ url_for('client_pay', jid=job.id) }}" target="_blank"
+         class="btn btn-outline-primary btn-sm ms-2">
+        <i class="fas fa-link me-1"></i>Open Payment Link
+      </a>
+      {% endif %}
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+
+
+<div class="col-md-3 col-sm-6">
+  <div class="card border-0 shadow-sm h-100">
+    <div class="card-body d-flex align-items-center gap-3">
+      <div class="rounded-circle bg-success bg-opacity-15 p-3">
+        <i class="fas fa-arrow-down text-success fa-xl"></i>
+      </div>
+      <div>
+        <div class="text-muted small">Revenue Collected</div>
+        <div class="fw-bold fs-5 text-success">₹{{ "%.0f"|format(total_collected) }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="col-md-3 col-sm-6">
+  <div class="card border-0 shadow-sm h-100">
+    <div class="card-body d-flex align-items-center gap-3">
+      <div class="rounded-circle bg-warning bg-opacity-15 p-3">
+        <i class="fas fa-arrow-up text-warning fa-xl"></i>
+      </div>
+      <div>
+        <div class="text-muted small">Total Disbursed</div>
+        <div class="fw-bold fs-5 text-warning">₹{{ "%.0f"|format(total_disbursed) }}</div>
+      </div>
+    </div>
+  </div>
+</div>

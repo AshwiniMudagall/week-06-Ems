@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}Edit Electrician{% endblock %}
+{% block page_title %}Edit Electrician{% endblock %}
+{% block content %}
+<div class="card shadow-sm" style="max-width:500px;">
+  <div class="card-body">
+    <form method="POST" action="/electricians/edit/{{ electrician.id }}">
+      <div class="mb-3"><label class="form-label">Full Name</label>
+        <input type="text" name="name" class="form-control" value="{{ electrician.name }}" required></div>
+      <div class="mb-3"><label class="form-label">Phone</label>
+        <input type="text" name="phone" class="form-control" value="{{ electrician.phone }}"></div>
+      <div class="mb-3"><label class="form-label">Email</label>
+        <input type="email" name="email" class="form-control" value="{{ electrician.email or '' }}"></div>
+      <div class="mb-3"><label class="form-label">Specialization</label>
+        <input type="text" name="specialization" class="form-control" value="{{ electrician.specialization or '' }}"></div>
+      <div class="mb-3"><label class="form-label">Status</label>
+        <select name="status" class="form-select">
+          <option {% if electrician.status=='Active' %}selected{% endif %}>Active</option>
+          <option {% if electrician.status=='Inactive' %}selected{% endif %}>Inactive</option>
+        </select></div>
+      <button class="btn btn-primary w-100">Save Changes</button>
+      <a href="/electricians" class="btn btn-secondary w-100 mt-2">Cancel</a>
+    </form>
+  </div>
+</div>
+{% endblock %}
